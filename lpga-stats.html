@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LPGA Mobile Stats Tracker</title>
+  <style>
+    /* CSS RESET & VARIABLES */
+    :root {
+      --lpga-blue: #002d62;
+      --lpga-green: #00875a;
+      --lpga-accent: #00b4d8;
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    /* MOBILE CONTAINER SCHEME */
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg-dark);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    header {
+      background-color: var(--lpga-blue);
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #ffffff;
+    }
+
+    header p {
+      font-size: 0.75rem;
+      color: var(--lpga-accent);
+      margin-top: 2px;
+    }
+
+    /* NAVIGATION TABS */
+    nav {
+      display: flex;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab-btn.active {
+      color: var(--text-main);
+      border-bottom-color: var(--lpga-green);
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    /* MAIN CONTENT AREA */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    /* SEARCH & FILTER CONTROLS */
+    .controls {
+      margin-bottom: 12px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .search-input, .select-input {
+      width: 100%;
+      padding: 10px 12px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .search-input:focus, .select-input:focus {
+      border-color: var(--lpga-accent);
+    }
+
+    /* LIST & CARD STYLES */
+    .data-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rank {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      width: 24px;
+    }
+
+    .player-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .player-country {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--lpga-accent);
+      text-align: right;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      text-align: right;
+    }
+
+    /* LEADERBOARD TABLE */
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: var(--card-bg);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .leaderboard-table th, 
+    .leaderboard-table td {
+      padding: 12px 10px;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    .leaderboard-table th {
+      background-color: rgba(0, 0, 0, 0.2);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    .leaderboard-table tr {
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .leaderboard-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .score-under {
+      color: #4ade80;
+      font-weight: 700;
+    }
+
+    .score-even {
+      color: var(--text-muted);
+    }
+
+    /* FOOTER / STATUS */
+    footer {
+      padding: 8px 16px;
+      background-color: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-dot {
+      height: 8px;
+      width: 8px;
+      background-color: var(--lpga-green);
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <h1>LPGA Tour Stats</h1>
+      <p>Season Performance & Live Scores</p>
+    </header>
+
+    <nav>
+      <button class="tab-btn active" onclick="switchTab('stats')">Tour Stats</button>
+      <button class="tab-btn" onclick="switchTab('leaderboard')">Leaderboard</button>
+      <button class="tab-btn" onclick="switchTab('players')">Players</button>
+    </nav>
+
+    <main>
+      <!-- VIEW 1: STATS CATEGORIES -->
+      <section id="stats-view" class="view active">
+        <div class="controls">
+          <select id="stat-category" class="select-input" onchange="renderStats()">
+            <option value="scoring">Scoring Average</option>
+            <option value="driving">Driving Distance (Yds)</option>
+            <option value="gir">Greens in Regulation (%)</option>
+            <option value="putting">Putting Average</option>
+          </select>
+        </div>
+        <div id="stats-list"></div>
+      </section>
+
+      <!-- VIEW 2: LEADERBOARD -->
+      <section id="leaderboard-view" class="view">
+        <div style="margin-bottom: 8px; font-size: 0.8rem; color: var(--lpga-accent); font-weight: 600;">
+          Current Event: LPGA Championship
+        </div>
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Pos</th>
+              <th>Player</th>
+              <th>Thru</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body"></tbody>
+        </table>
+      </section>
+
+      <!-- VIEW 3: PLAYER SEARCH -->
+      <section id="players-view" class="view">
+        <div class="controls">
+          <input type="text" id="player-search" class="search-input" placeholder="Search player name..." oninput="renderPlayers()">
+        </div>
+        <div id="players-list"></div>
+      </section>
+    </main>
+
+    <footer>
+      <div><span class="status-dot"></span>Data Updated Live</div>
+      <div>LPGA Mobile</div>
+    </footer>
+  </div>
+
+  <script>
+    // DATA STORE
+    const playerDatabase = [
+      { id: 1, name: "Nelly Korda", country: "USA", scoring: 69.82, driving: 271.4, gir: 74.5, putting: 29.1, pos: "1", thru: "F", total: "-14" },
+      { id: 2, name: "Lilia Vu", country: "USA", scoring: 70.15, driving: 265.8, gir: 72.1, putting: 28.8, pos: "2", thru: "F", total: "-12" },
+      { id: 3, name: "Celine Boutier", country: "FRA", scoring: 70.28, driving: 258.2, gir: 71.8, putting: 28.5, pos: "T3", thru: "16", total: "-10" },
+      { id: 4, name: "Ruoning Yin", country: "CHN", scoring: 70.35, driving: 263.9, gir: 73.2, putting: 29.4, pos: "T3", thru: "15", total: "-10" },
+      { id: 5, name: "Minjee Lee", country: "AUS", scoring: 70.41, driving: 267.1, gir: 75.1, putting: 29.8, pos: "5", thru: "F", total: "-8" },
+      { id: 6, name: "Charley Hull", country: "ENG", scoring: 70.52, driving: 269.0, gir: 70.9, putting: 29.2, pos: "6", thru: "17", total: "-7" },
+      { id: 7, name: "Lydia Ko", country: "NZL", scoring: 70.58, driving: 256.4, gir: 69.8, putting: 28.2, pos: "7", thru: "F", total: "-5" },
+      { id: 8, name: "Atthaya Thitikul", country: "THA", scoring: 70.64, driving: 264.5, gir: 72.8, putting: 29.0, pos: "8", thru: "14", total: "-3" }
+    ];
+
+    // NAVIGATION SYSTEM
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+
+      event.target.classList.add('active');
+      document.getElementById(`${tabName}-view`).classList.add('active');
+    }
+
+    // RENDER CATEGORY STATS
+    function renderStats() {
+      const category = document.getElementById('stat-category').value;
+      const statsList = document.getElementById('stats-list');
+      
+      // Sort dataset dynamically depending on metric
+      let sorted = [...playerDatabase];
+      if (category === 'scoring' || category === 'putting') {
+        sorted.sort((a, b) => a[category] - b[category]); // Lower is better
+      } else {
+        sorted.sort((a, b) => b[category] - a[category]); // Higher is better
+      }
+
+      const labels = {
+        scoring: "Avg Score",
+        driving: "Avg Yards",
+        gir: "GIR %",
+        putting: "Putts / Rd"
+      };
+
+      statsList.innerHTML = sorted.map((player, index) => `
+        <div class="data-card">
+          <div class="player-info">
+            <span class="rank">${index + 1}</span>
+            <div>
+              <div class="player-name">${player.name}</div>
+              <div class="player-country">${player.country}</div>
+            </div>
+          </div>
+          <div>
+            <div class="stat-value">${player[category]}</div>
+            <div class="stat-label">${labels[category]}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // RENDER LEADERBOARD
+    function renderLeaderboard() {
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = playerDatabase.map(player => `
+        <tr>
+          <td><strong>${player.pos}</strong></td>
+          <td>
+            <div style="font-weight:600">${player.name}</div>
+            <div style="font-size:0.7rem; color: var(--text-muted)">${player.country}</div>
+          </td>
+          <td>${player.thru}</td>
+          <td class="${player.total.startsWith('-') ? 'score-under' : 'score-even'}">${player.total}</td>
+        </tr>
+      `).join('');
+    }
+
+    // RENDER PLAYER DIRECTORY & SEARCH
+    function renderPlayers() {
+      const query = document.getElementById('player-search').value.toLowerCase();
+      const playersList = document.getElementById('players-list');
+
+      const filtered = playerDatabase.filter(player => 
+        player.name.toLowerCase().includes(query) || 
+        player.country.toLowerCase().includes(query)
+      );
+
+      playersList.innerHTML = filtered.map(player => `
+        <div class="data-card">
+          <div class="player-info">
+            <div>
+              <div class="player-name">${player.name}</div>
+              <div class="player-country">${player.country}</div>
+            </div>
+          </div>
+          <div>
+            <div class="stat-value">${player.scoring}</div>
+            <div class="stat-label">Scoring Avg</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // INITIALIZATION
+    window.onload = () => {
+      renderStats();
+      renderLeaderboard();
+      renderPlayers();
+    };
+  </script>
+</body>
+</html>
