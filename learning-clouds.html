@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloud Types Explorer</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      color: var(--text-main);
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      color: #0369a1;
+    }
+
+    header p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .nav-tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.6);
+      padding: 4px;
+      border-radius: 12px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--card-bg);
+      color: var(--accent);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .view-section {
+      display: none;
+    }
+
+    .view-section.active {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .cloud-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cloud-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cloud-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #0c4a6e;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-high { background: #e0f2fe; color: #0369a1; }
+    .badge-mid { background: #fef3c7; color: #b45309; }
+    .badge-low { background: #dcfce7; color: #15803d; }
+    .badge-vertical { background: #f3e8ff; color: #6b21a8; }
+
+    .cloud-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .quiz-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+
+    .quiz-question {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .option-btn {
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      background: white;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .option-btn.correct { background: #dcfce7; border-color: #22c55e; color: #15803d; }
+    .option-btn.wrong { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
+
+    .score-board {
+      font-weight: bold;
+      margin-top: 12px;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header>
+      <h1>Cloud Explorer</h1>
+      <p>Learn to identify the skies</p>
+    </header>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('learn')">Learn</button>
+      <button class="tab-btn" onclick="switchTab('quiz')">Quiz</button>
+    </div>
+
+    <!-- Learn View -->
+    <div id="learn-view" class="view-section active"></div>
+
+    <!-- Quiz View -->
+    <div id="quiz-view" class="view-section">
+      <div class="quiz-card">
+        <div id="quiz-question" class="quiz-question">Loading...</div>
+        <div id="options-container" class="options-grid"></div>
+        <div id="score-display" class="score-board">Score: 0</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cloudData = [
+      { name: "Cirrus", altitude: "High", altitudeClass: "badge-high", desc: "Thin, wispy clouds made of ice crystals. Often called 'mare's tails'." },
+      { name: "Altocumulus", altitude: "Mid", altitudeClass: "badge-mid", desc: "Gray or white sheet/patches with a rolled or bumpy appearance." },
+      { name: "Stratus", altitude: "Low", altitudeClass: "badge-low", desc: "Flat, featureless gray layers covering the whole sky like a blanket. Bring light drizzle." },
+      { name: "Cumulus", altitude: "Low", altitudeClass: "badge-low", desc: "Fluffy, cotton-like clouds with flat bases. Usually mean fair weather." },
+      { name: "Cumulonimbus", altitude: "Vertical", altitudeClass: "badge-vertical", desc: "Towering thunderstorm clouds capable of producing heavy rain, hail, and lightning." }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    function renderLearnView() {
+      const container = document.getElementById("learn-view");
+      container.innerHTML = cloudData.map(cloud => `
+        <div class="cloud-card">
+          <div class="cloud-header">
+            <span class="cloud-title">${cloud.name}</span>
+            <span class="badge ${cloud.altitudeClass}">${cloud.altitude}</span>
+          </div>
+          <p class="cloud-desc">${cloud.desc}</p>
+        </div>
+      `).join("");
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".view-section").forEach(sec => sec.classList.remove("active"));
+
+      if (tab === "learn") {
+        document.querySelectorAll(".tab-btn")[0].classList.add("active");
+        document.getElementById("learn-view").classList.add("active");
+      } else {
+        document.querySelectorAll(".tab-btn")[1].classList.add("active");
+        document.getElementById("quiz-view").classList.add("active");
+        loadQuizQuestion();
+      }
+    }
+
+    function loadQuizQuestion() {
+      const cloud = cloudData[currentQuestion % cloudData.length];
+      document.getElementById("quiz-question").innerText = `Which cloud is described as: "${cloud.desc}"?`;
+      
+      const optionsContainer = document.getElementById("options-container");
+      optionsContainer.innerHTML = "";
+
+      const options = [...cloudData].sort(() => 0.5 - Math.random());
+
+      options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerText = opt.name;
+        btn.onclick = () => checkAnswer(btn, opt.name === cloud.name);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selectedBtn, isCorrect) {
+      const buttons = document.querySelectorAll(".option-btn");
+      buttons.forEach(b => b.disabled = true);
+
+      if (isCorrect) {
+        selectedBtn.classList.add("correct");
+        score++;
+      } else {
+        selectedBtn.classList.add("wrong");
+      }
+
+      document.getElementById("score-display").innerText = `Score: ${score}`;
+
+      setTimeout(() => {
+        currentQuestion++;
+        loadQuizQuestion();
+      }, 1200);
+    }
+
+    // Initialize
+    renderLearnView();
+  </script>
+</body>
+</html>
